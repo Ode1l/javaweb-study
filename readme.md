@@ -1139,3 +1139,757 @@ public class SessionDemo01 extends HttpServlet {
 ```
 
 ![1568344679763](img/1568344679763.png)
+
+## JSP
+
+> Java Server Pages ： Java服务器端页面，也和Servlet一样，用于动态Web技术！
+
+- 最大的特点：
+    - 写JSP就像在写HTML；
+    - 区别：
+        - HTML只给用户提供静态的数据；
+        - JSP页面中可以嵌入JAVA代码，为用户提供动态数据；
+
+### JSP原理
+
+思路：JSP到底怎么执行的
+
+- 代码层面没有任何问题；
+
+- 服务器内部工作：
+
+    - tomcat中有一个work目录；
+
+- IDEA中使用Tomcat的会在IDEA的tomcat中生产一个work目录
+
+进一步去打开文件夹
+
+- 我电脑的地址：
+
+```
+C:\Users\Ode1l\AppData\Local\JetBrains\IntelliJIdea2023.1\tomcat\9ba303f9-811c-4371-8e62-70d93d4e96de\work\Catalina\localhost\context\org\apache\jsp
+```
+
+- 发现页面转变成了Java程序！
+
+![image-20210731111517039](img/image-20210731111517039.png)
+
+
+
+- **浏览器向服务器发送请求，不管访问什么资源，其实都是在访问Servlet！**
+
+- JSP最终也会被转换成为一个Java类！
+
+- **JSP 本质上就是一个Servlet**！
+
+```java
+// 初始化
+  public void _jspInit() {
+  }
+// 销毁
+  public void _jspDestroy() {
+  }
+// JSPService
+  public void _jspService(final javax.servlet.http.HttpServletRequest request, final javax.servlet.http.HttpServletResponse response)
+      throws java.io.IOException, javax.servlet.ServletException {   
+```
+
+1. 判断请求；
+
+2. 内置一些对象；
+
+   ```java
+   final javax.servlet.jsp.PageContext pageContext;  // 页面上下文
+   javax.servlet.http.HttpSession session = null;    // session
+   final javax.servlet.ServletContext application;   // applicationContext
+   final javax.servlet.ServletConfig config;         // config
+   javax.servlet.jsp.JspWriter out = null;           // out
+   final java.lang.Object page = this;               // page：当前
+   HttpServletRequest request                        // 请求
+   HttpServletResponse response                      // 响应
+   ```
+
+3. 输出页面前增加的代码；
+
+   ```java
+   response.setContentType("text/html");       // 设置响应的页面类型
+   pageContext = _jspxFactory.getPageContext(this, request, response,
+                                             null, true, 8192, true);
+   _jspx_page_context = pageContext;
+   application = pageContext.getServletContext();
+   config = pageContext.getServletConfig();
+   session = pageContext.getSession();
+   out = pageContext.getOut();
+   _jspx_out = out;
+   ```
+
+4. 以上的这些个对象我们可以在JSP页面中直接使用！
+
+![1568347078207](img/1568347078207.png)
+
+- 在JSP页面中：
+    - 只要是 JAVA代码就会原封不动的输出；
+    - 如果是HTML代码，就会被转换为：
+
+```java
+      out.write("<html>\n");
+      out.write("  <head>\n");
+      out.write("    <title>$Title$</title>\n");
+      out.write("  </head>\n");
+      out.write("  <body>\n");
+      out.write("  $END$\n");
+      out.write("  </body>\n");
+      out.write("</html>\n");
+```
+
+- 这样的格式，输出到前端！
+
+### 3.JSP基础语法
+
+- 任何语言都有自己的语法，JAVA中有，JSP 作为java技术的一种应用，它拥有一些自己扩充的语法（了解，知道即可！），Java所有语法都支持！
+- 配置必需的maven环境：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>JavaWeb-02-Servlet</artifactId>
+        <groupId>com.github</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>Jsp</artifactId>
+
+    <dependencies>
+<!--   Servlet 依赖   -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+        </dependency>
+<!--        JSP 依赖   -->
+        <dependency>
+            <groupId>javax.servlet.jsp</groupId>
+            <artifactId>javax.servlet.jsp-api</artifactId>
+            <version>2.3.3</version>
+        </dependency>
+<!--        JSTL表达式的依赖-->
+        <dependency>
+            <groupId>javax.servlet.jsp.jstl</groupId>
+            <artifactId>jstl-api</artifactId>
+            <version>1.2</version>
+        </dependency>
+<!--        standard标签库-->
+        <dependency>
+            <groupId>taglibs</groupId>
+            <artifactId>standard</artifactId>
+            <version>1.1.2</version>
+        </dependency>
+        
+    </dependencies>
+
+</project>
+```
+
+#### **JSP表达式**
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+  <head>
+    <title>$Title$</title>
+  </head>
+  <body>
+
+  <%--JSP表达式
+  作用：用来将程序的输出，输出到客户端
+  <%= 变量或者表达式%>
+  --%>
+  <%= new java.util.Date()%>
+
+  </body>
+</html>
+```
+
+#### **jsp脚本片段**
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+  <head>
+    <title>$Title$</title>
+  </head>
+  <body>
+
+  <%--jsp脚本片段--%>
+  <%
+    int sum = 0;
+    for (int i = 1; i <=100 ; i++) {
+      sum+=i;
+    }
+    out.println("<h1>Sum="+sum+"</h1>");
+  %>
+
+  </body>
+</html>
+```
+
+- **脚本片段的再实现**
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+  <head>
+    <title>$Title$</title>
+  </head>
+  <body>
+
+  <%
+    int x = 10;
+    out.println(x);
+  %>
+  <p>这是一个JSP文档</p>
+  <%
+    int num = 2;
+    out.println(num);
+  %>
+
+  <hr>
+
+  <%--在代码嵌入HTML元素--%>
+  <%
+    for (int i = 0; i < 5; i++) {
+  %>
+  <h1>Hello,World  <%=i%> </h1>
+  <%
+    }
+  %>
+
+  </body>
+</html>
+```
+
+#### JSP声明
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+  <head>
+    <title>$Title$</title>
+  </head>
+  <body>
+
+  <%!
+    static {
+      System.out.println("Loading Servlet!");
+    }
+
+    private int globalVar = 0;
+
+    public void guo(){
+      System.out.println("进入了方法guo！");
+    }
+  %>
+
+  </body>
+</html>
+```
+
+- JSP声明：会被编译到JSP生成Java的类中！其他的，就会被生成到_jspService方法中！
+
+![image-20210731181245696](img/image-20210731181245696.png)
+
+- 在JSP，嵌入Java代码即可！
+
+```jsp
+<%%>
+<%=%>
+<%!%>
+
+<%--注释--%>
+```
+
+- JSP的注释，不会在客户端显示，HTML就会！
+
+### 4.JSP指令
+
+> 404与500页面实现
+
+- jsp2.jsp
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%--定制错误页面--%>
+<%--<%@ page errorPage="error/500.jsp" %>--%>
+<html>
+
+<head>
+    <title>Title</title>
+</head>
+<body>
+
+<%
+    int x = 1/0;
+%>
+
+</body>
+</html>
+```
+
+- 404.jsp
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>Title</title>
+</head>
+<body>
+    <img src="${pageContext.request.contextPath}/img/2-404.png" alt="404">
+</body>
+</html>
+```
+
+- 500.jsp
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>Title</title>
+</head>
+<body>
+<h2>自定义500错误的界面</h2>
+<img src="${pageContext.request.contextPath}/img/1-500.png" alt="500">
+</body>
+</html>
+```
+
+- web.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+
+    <error-page>
+        <error-code>404</error-code>
+        <location>/error/404.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>500</error-code>
+        <location>/error/500.jsp</location>
+    </error-page>
+
+</web-app>
+```
+
+> 头部和尾部页面拼接
+
+- footer.jsp
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+<head>
+    <title>footer</title>
+</head>
+<body>
+
+<h1>我是footer</h1>
+
+</body>
+</html>
+```
+
+- header.jsp
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+<head>
+    <title>head</title>
+</head>
+<body>
+
+<h1>我是header</h1>
+
+</body>
+</html>
+```
+
+- jsp3.jsp
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+<head>
+<title>jsp3</title>
+</head>
+<body>
+    <%-- @include会将两个页面合二为一 --%>
+
+    <%@include file="common/header.jsp"%>
+    <h1>网页主体</h1>
+    <%@include file="common/footer.jsp"%>
+
+    <hr>
+
+    <%--
+        jsp标签
+        jsp:include：拼接页面，本质还是三个
+    --%>
+    <jsp:include page="/common/header.jsp"/>
+    <h1>网页主体</h1>
+    <jsp:include page="/common/footer.jsp"/>
+
+</body>
+</html>
+```
+
+### 5.9大内置对象
+
+- PageContext    存东西
+- Request     存东西
+- Response
+- Session      存东西
+- Application   【SerlvetContext】   存东西
+- config    【SerlvetConfig】
+- out
+- page ，不用了解
+- exception
+
+```java
+<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+<head>
+    <title>Title</title>
+</head>
+<body>
+<%--内置对象--%>
+<%
+    pageContext.setAttribute("name1","天启1号"); // 保存的数据只在一个页面中有效
+    request.setAttribute("name2","天启2号"); // 保存的数据只在一次请求中有效，请求转发会携带这个数据
+    session.setAttribute("name3","天启3号"); // 保存的数据只在一次会话中有效，从打开浏览器到关闭浏览器
+    application.setAttribute("name4","天启4号");  // 保存的数据只在服务器中有效，从打开服务器到关闭服务器
+%>
+
+<%--
+    脚本片段中的代码，会被原封不动生成到.jsp.java
+    要求：这里面的代码，必须保证Java语法的正确性
+--%>
+
+<%
+    // 从pageContent取出，我们通过寻找的方式来
+    // 从底层到高层（作用域）:
+    String name1 = (String) pageContext.findAttribute("name1");
+    String name2 = (String) pageContext.findAttribute("name2");
+    String name3 = (String) pageContext.findAttribute("name3");
+    String name4 = (String) pageContext.findAttribute("name4");
+    String name5 = (String) pageContext.findAttribute("name5"); // 作用域
+
+%>
+
+<%--使用EL表达式输出 ${} --%>
+<h1>取出的值:</h1>
+<h3>${name1}</h3>
+<h3>${name2}</h3>
+<h3>${name3}</h3>
+<h3>${name4}</h3>
+<h3> <%=name5%> </h3>
+
+</body>
+</html>
+```
+
+> 如果EL表达式不生效，请在JSP页面最上面加上：<%@page isELIgnored="false" %>
+
+![image-20210801175312931](img/image-20210801175312931.png)
+
+- request：客户端向服务器发送请求，产生的数据，用户看完就没用了，比如：新闻，用户看完没用的！
+- session：客户端向服务器发送请求，产生的数据，用户用完一会还有用，比如：购物车；
+- application：客户端向服务器发送请求，产生的数据，一个用户用完了，其他用户还可能使用，比如：聊天数据；
+
+### JSP标签.JSTL标签.EL表达式
+
+- EL表达式：  ${ }
+    - **获取数据**
+    - **执行运算**
+    - **获取web开发的常用对象**
+
+
+```jsp
+<!-- JSTL表达式的依赖 -->
+<dependency>
+    <groupId>javax.servlet.jsp.jstl</groupId>
+    <artifactId>jstl-api</artifactId>
+    <version>1.2</version>
+</dependency>
+<!-- standard标签库 -->
+<dependency>
+    <groupId>taglibs</groupId>
+    <artifactId>standard</artifactId>
+    <version>1.1.2</version>
+</dependency>
+```
+
+- **JSP标签**
+
+- jspTag.jsp
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+<head>
+    <title>jspTag</title>
+</head>
+<body>
+
+<h1>Tag1</h1>
+
+<%--jsp:include--%>
+
+<%--
+http://localhost:8080/Jsp/jspTag.jsp?name=subeily&age=18
+--%>
+
+<jsp:forward page="/jspTag2.jsp">
+    <jsp:param name="name" value="subeiLY"/>
+    <jsp:param name="age" value="18"/>
+</jsp:forward>
+
+
+</body>
+</html>
+```
+
+- jspTag2.jsp
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+<head>
+    <title>jspTag2</title>
+</head>
+<body>
+
+<h1>Tag2</h1>
+
+<%--取出参数--%>
+    
+名字:<%=request.getParameter("name")%>
+年龄:<%=request.getParameter("age")%>
+
+</body>
+</html>
+```
+
+- **JSTL表达式**
+    - JSTL标签库的使用就是为了弥补HTML标签的不足；它自定义许多标签，可以供我们使用，标签的功能和Java代码一样！
+- **格式化标签**
+- **SQL标签**
+- **XML 标签**
+- **核心标签** （掌握部分）
+
+- **JSTL标签库使用步骤**：
+    - 引入对应的 taglib；
+    - 使用其中的方法；
+    - **在Tomcat 的lib目录下也需要引入 jstl-api-1.2.jar、standard-1.1.2.jar的包，否则会报错：JSTL解析错误**；
+
+- c：if
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%--引入jstl核心标签库--%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<html>
+<head>
+    <title>core-if</title>
+</head>
+<body>
+
+<h4>if测试</h4>
+
+<hr>
+
+<form action="core-if.jsp" method="get">
+    <%--
+        EL表达式获取表单中的数据
+        ${param.参数名}
+    --%>
+    <input type="text" name="username" value="${param.username}">
+    <input type="submit" value="登录">
+</form>
+
+<%--判断如果提交的用户名是管理员，则登录成功--%>
+<c:if test="${param.username=='admin'}" var="isAdmin">
+    <c:out value="管理员欢迎您！"/>
+</c:if>
+
+<%--自闭合标签--%>
+<c:out value="${isAdmin}"/>
+
+</body>
+</html>
+```
+
+- c:choose   c:when
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%--引入jstl核心标签库--%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<html>
+<head>
+    <title>core-for</title>
+</head>
+<body>
+
+<%--定义一个变量score，值为85--%>
+<c:set var="score" value="65"/>
+
+<c:choose>
+    <c:when test="${score>=90}">
+        你的成绩为优秀
+    </c:when>
+    <c:when test="${score>=80}">
+        你的成绩为一般
+    </c:when>
+    <c:when test="${score>=70}">
+        你的成绩为良好
+    </c:when>
+    <c:when test="${score<=60}">
+        你的成绩为不及格
+    </c:when>
+</c:choose>
+
+</body>
+</html>
+```
+
+- c:forEach
+
+```jsp
+<%@ page import="java.util.ArrayList" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%--引入jstl核心标签库--%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<html>
+<head>
+    <title>core-foreach</title>
+</head>
+<body>
+
+<%
+
+    ArrayList<String> people = new ArrayList<>();
+    people.add(0,"张三");
+    people.add(1,"李四");
+    people.add(2,"王五");
+    people.add(3,"赵六");
+    people.add(4,"田六");
+    request.setAttribute("list",people);
+%>
+
+<%--
+var , 每一次遍历出来的变量
+items, 要遍历的对象
+begin,   哪里开始
+end,     到哪里
+step,   步长
+--%>
+<c:forEach var="people" items="${list}">
+    <c:out value="${people}"/> <br>
+</c:forEach>
+
+<hr>
+
+<c:forEach var="people" items="${list}" begin="1" end="3" step="1" >
+    <c:out value="${people}"/> <br>
+</c:forEach>
+
+</body>
+</html>
+```
+
+## JavaBean
+
+实体类，JavaBean有特定的写法：
+
+- 必须要有一个无参构造
+- 属性必须私有化
+- 必须有对应的get/set方法；
+
+一般用来和数据库的字段做映射  ORM；
+
+ORM ：对象关系映射
+
+- 表--->类
+- 字段-->属性
+- 行记录---->对象
+
+**people表**
+
+|  id  |  name   | age  | address |
+| :--: | :-----: | :--: | :-----: |
+|  1   | 饺子1号 |  3   |  成都   |
+|  2   | 饺子2号 |  18  |  成都   |
+|  3   | 饺子3号 |  85  |  成都   |
+
+```java
+class People{
+    private int id;
+    private String name;
+    private int age;
+    private String address;
+}
+```
+
+```java
+class A{
+    new People(1,"饺子1号",3，"成都");
+    new People(2,"饺子1号",18，"成都");
+    new People(3,"饺子1号",85，"成都");
+}
+```
+
+- javaBean.jsp
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+<head>
+    <title>Title</title>
+</head>
+<body>
+
+<%
+//    People people = new People();
+//    people.setAddress();
+//    people.setId();
+//    people.getAge()
+//    people.setName();
+
+%>
+
+<jsp:useBean id="people" class="com.github.pojo.People" />
+
+<jsp:setProperty name="people" property="address" value="成都"/>
+<jsp:setProperty name="people" property="id" value="1"/>
+<jsp:setProperty name="people" property="age" value="2"/>
+<jsp:setProperty name="people" property="name" value="哇哈哈AD钙"/>
+
+姓名:<jsp:getProperty name="people" property="name"/>
+ ID:<jsp:getProperty name="people" property="id"/>
+年龄:<jsp:getProperty name="people" property="age"/>
+地址:<jsp:getProperty name="people" property="address"/>
+
+</body>
+</html>
+```
+

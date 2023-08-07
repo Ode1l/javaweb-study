@@ -12,6 +12,7 @@
         <module>maven-template</module>
         <module>servlet</module>
         <module>session-cookie</module>
+        <module>jsp</module>
     </modules>
 
     <properties>
