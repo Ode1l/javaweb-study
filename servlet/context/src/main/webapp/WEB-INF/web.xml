@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+                        http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0"
+         metadata-complete="true">
+
+    <!-- 配置一些Web应用初始化参数 -->
+    <context-param>
+        <param-name>url</param-name>
+        <param-value>jdbc:mysql://localhost:3306/mybatis</param-value>
+    </context-param>
+    <context-param>
+        <param-name>Name</param-name>
+        <param-value>NMSL</param-value>
+    </context-param>
+
+    <servlet>
+        <servlet-name>set</servlet-name>
+        <servlet-class>com.iris.servlet.SetServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>set</servlet-name>
+        <url-pattern>/set</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>get</servlet-name>
+        <servlet-class>com.iris.servlet.GetServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>get</servlet-name>
+        <url-pattern>/get</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>getInit</servlet-name>
+        <servlet-class>com.iris.servlet.GetInitParameterServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>getInit</servlet-name>
+        <url-pattern>/getInit</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>dispatcher</servlet-name>
+        <servlet-class>com.iris.servlet.DispatcherServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>dispatcher</servlet-name>
+        <url-pattern>/dispatcher</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>db</servlet-name>
+        <servlet-class>com.iris.servlet.GetResourceServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>db</servlet-name>
+        <url-pattern>/db</url-pattern>
+    </servlet-mapping>
+</web-app>
