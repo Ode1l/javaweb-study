@@ -13,6 +13,7 @@
         <module>servlet</module>
         <module>session-cookie</module>
         <module>jsp</module>
+        <module>filter</module>
     </modules>
 
     <properties>

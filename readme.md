@@ -1916,7 +1916,7 @@ JDBC
 Mysql Oracle SqlServer ....
 ```
 
-### 2.MVC三层架构
+### MVC三层架构
 
 ![1568424227281](img/1568424227281.png)
 
@@ -1942,5 +1942,470 @@ Controller  （Servlet）
 
 ```
 登录--->接收用户的登录请求--->处理用户的请求（获取用户登录的参数，username，password）---->交给业务层处理登录业务（判断用户名密码是否正确：事务）--->Dao层查询用户名和密码是否正确-->数据库
+```
+
+## Filter(重点)
+
+Filter：过滤器 ，用来过滤网站的数据；
+
+- 处理中文乱码
+- 登录验证….
+
+![1568424858708](img/1568424858708.png)
+
+Filter开发步骤：
+
+1. 导包
+
+2. 编写过滤器
+
+    1. 导包不要错:
+
+```java
+import javax.servlet.*;
+```
+
+    2. 实现Filter接口，重写对应的方法即可:
+
+```java
+       package com.github.filter;
+       
+       import javax.servlet.*;
+       import java.io.IOException;
+       
+       public class CharacterEncodingFilter implements Filter {
+           
+           /**
+            * 初始化：web服务器启动，就以及初始化了，随时等待过滤对象出现！
+            */
+           public void init(FilterConfig filterConfig) {
+               System.out.println("CharacterEncodingFilter初始化");
+           }
+       
+           /**
+            * Chain : 链
+            * 
+            * 1. 过滤中的所有代码，在过滤特定请求的时候都会执行
+            * 2. 必须要让过滤器继续同行
+            *    chain.doFilter(request,response);
+            */
+           public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+               request.setCharacterEncoding("utf-8");
+               response.setCharacterEncoding("utf-8");
+               response.setContentType("text/html;charset=UTF-8");
+       
+               System.out.println("CharacterEncodingFilter执行前....");
+               // 让我们的请求继续走，如果不写，程序到这里就被拦截停止！
+               chain.doFilter(request,response);
+               System.out.println("CharacterEncodingFilter执行后....");
+           }
+       
+           /**
+            * 销毁：web服务器关闭的时候，过滤会销毁
+            */
+           public void destroy() {
+               System.out.println("CharacterEncodingFilter销毁");
+           }
+       }
+```
+
+3. 在web.xml中配置 Filter:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+   <web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+            version="4.0">
+   
+       <filter>
+           <filter-name>CharacterEncodingFilter</filter-name>
+           <filter-class>com.iris.filter.CharacterEncodingFilter</filter-class>
+       </filter>
+       <filter-mapping>
+           <filter-name>CharacterEncodingFilter</filter-name>
+           <!--只要是 /servlet的任何请求，会经过这个过滤器-->
+           <url-pattern>/servlet/*</url-pattern>
+           <!--<url-pattern>/*</url-pattern>-->
+       </filter-mapping>
+   
+   </web-app>
+```
+
+4. 写一个会乱码的接口并注册
+
+```java
+package com.iris.servlet;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class ShowServlet extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.getWriter().write("过滤器测试乱码！");
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        doGet(req, resp);
+    }
+}
+```
+
+如果访问http://localhost:8080/show则会乱码，访问http://localhost:8080/servlet/show则正常。
+
+
+## 监听器
+
+实现一个监听器的接口:（有N种）
+
+1. 编写一个监听器:
+
+   实现监听器的接口:
+
+   ```java
+   package com.github.listener;
+   
+   import javax.servlet.ServletContext;
+   import javax.servlet.http.HttpSessionEvent;
+   import javax.servlet.http.HttpSessionListener;
+   
+   /**
+    * @author: subei
+    * @Description: 统计网站在线人数 ： 统计session
+    */
+   public class OnlineCountListener implements HttpSessionListener {
+       /**
+        * 创建session监听： 看你的一举一动
+        * 一旦创建Session就会触发一次这个事件！
+        * @param se
+        */
+       public void sessionCreated(HttpSessionEvent se) {
+           ServletContext ctx = se.getSession().getServletContext();
+   
+           System.out.println(se.getSession().getId());
+   
+           Integer onlineCount = (Integer) ctx.getAttribute("OnlineCount");
+   
+           if (onlineCount==null){
+               onlineCount = new Integer(1);
+           }else {
+               int count = onlineCount.intValue();
+               onlineCount = new Integer(count+1);
+           }
+   
+           ctx.setAttribute("OnlineCount",onlineCount);
+       }
+   
+       /**
+        * 销毁session监听
+        * 一旦销毁Session就会触发一次这个事件！
+        * @param se
+        */
+       public void sessionDestroyed(HttpSessionEvent se) {
+           ServletContext ctx = se.getSession().getServletContext();
+   
+           Integer onlineCount = (Integer) ctx.getAttribute("OnlineCount");
+   
+           if (onlineCount==null){
+               onlineCount = new Integer(0);
+           }else {
+               int count = onlineCount.intValue();
+               onlineCount = new Integer(count-1);
+           }
+   
+           ctx.setAttribute("OnlineCount",onlineCount);
+       }
+       /**
+        * Session销毁：
+        * 1. 手动销毁  getSession().invalidate();
+        * 2. 自动销毁
+        */
+   }
+   ```
+   
+session自动销毁默认30分钟，也可也在web.xml中配置
+```xml
+<session-config>
+  <session-timeout>30</session-timeout>
+</session-config>
+```
+
+2. web.xml中注册监听器:
+
+   ```xml
+   <!--注册监听器-->
+   <listener>
+       <listener-class>com.github.listener.OnlineCountListener</listener-class>
+   </listener>
+   ```
+
+3. 看情况是否使用！
+
+## 过滤器.监听器常见应用
+
+- **监听器：GUI编程中经常使用；**
+
+```java
+package com.github.listener;
+
+import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+public class TestPanel {
+    public static void main(String[] args) {
+        // 新建一个窗体
+        Frame frame = new Frame("建军节快乐");  
+        // 面板
+        Panel panel = new Panel(null);
+        // 设置窗体的布局
+        frame.setLayout(null); 
+
+        frame.setBounds(300,300,500,500);
+        // 设置背景颜色1
+        frame.setBackground(new Color(68, 227, 177)); 
+
+        panel.setBounds(50,50,300,300);
+        // 设置背景颜色2
+        panel.setBackground(new Color(255, 242,0)); 
+
+        frame.add(panel);
+
+        frame.setVisible(true);
+
+        // 监听事件，监听关闭事件
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                super.windowClosing(e);
+            }
+        });
+
+    }
+}
+```
+
+> 案例：用户登录之后才能进入主页！用户注销后就不能进入主页了！
+
+1. 用户登录之后，向Sesison中放入用户的数据
+2. 进入主页的时候要判断用户是否已经登录；要求：在过滤器中实现！
+
+- 因为：个人tomcat配置的为 /filer 
+
+- LoginServlet.java
+
+```java
+package com.github.servlet;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class LoginServlet extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        super.doGet(req,resp);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // 获取前端请求的参数
+        String username = req.getParameter("username");
+
+        // 登陆成功
+        if("admin".equals(username)){
+            req.getSession().setAttribute("USER_SESSION",req.getSession().getId());
+            resp.sendRedirect("/Filer/sys/success.jsp");
+
+        } else {    // 登陆失败
+            resp.sendRedirect("/Filer/error.jsp");
+        }
+    }
+}
+```
+
+- LogoutServlet.java
+
+```java
+package com.github.servlet;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class LogoutServlet extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        Object user_session = req.getSession().getAttribute("USER_SESSION");
+        if(user_session!=null){
+            req.getSession().removeAttribute("USER_SESSION");
+            resp.sendRedirect("/Filer/Login.jsp");
+        } else {
+            resp.sendRedirect("/Filer/Login.jsp");
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        super.doPost(req,resp);
+    }
+}
+```
+
+- Login.jsp
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
+
+<h1>登陆界面</h1>
+<form action="/Filer/servlet/login" method="post">
+    <input type="text" name="username">
+    <input type="submit">
+</form>
+
+</body>
+</html>
+```
+
+- success.jsp
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+<head>
+    <title>成功</title>
+</head>
+<body>
+
+<%--<%--%>
+<%--    Object userSession = request.getSession().getAttribute("USER_SESSION");--%>
+<%--    if(userSession==null){--%>
+<%--        response.sendRedirect("Filer/Login.jsp");--%>
+<%--    }--%>
+<%--%>--%>
+
+<h1>主页</h1>
+
+<p><a href="/Filer/servlet/logout">注销</a> </p>
+
+</body>
+</html>
+```
+
+- error.jsp
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+<head>
+    <title>error</title>
+</head>
+<body>
+
+<h1>错误</h1>
+<h3>没有权限，用户名错误</h3>
+
+<p> <a href="/Filer/Login.jsp">返回登录主页</a></p>
+
+</body>
+</html>
+```
+
+- 进行登录注销无法登录判断:
+- Constant.java
+
+```java
+package com.github.Util;
+
+public class Constant {
+    public static String USER_SESSION="USER_SESSION";
+}
+```
+
+- SysFilter.java
+
+```java
+package com.github.listener;
+
+import com.github.Util.Constant;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class SysFilter implements Filter {
+
+    public void init(FilterConfig filterConfig) throws ServletException {
+
+    }
+
+    public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) req;
+        HttpServletResponse response = (HttpServletResponse) resp;
+
+        if (request.getSession().getAttribute(Constant.USER_SESSION)==null){
+            response.sendRedirect("/Filer/error.jsp");
+        }
+
+        chain.doFilter(request,response);
+    }
+
+    public void destroy() {
+
+    }
+}
+```
+
+- web.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+
+    <servlet>
+        <servlet-name>LoginServlet</servlet-name>
+        <servlet-class>com.iris.servlet.LoginServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>LoginServlet</servlet-name>
+        <url-pattern>/servlet/login</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>LogoutServlet</servlet-name>
+        <servlet-class>com.iris.servlet.LogoutServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>LogoutServlet</servlet-name>
+        <url-pattern>/servlet/logout</url-pattern>
+    </servlet-mapping>
+
+    <filter>
+        <filter-name>SysFilter</filter-name>
+        <filter-class>com.iris.listener.SysFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>SysFilter</filter-name>
+        <url-pattern>/sys/*</url-pattern>
+    </filter-mapping>
+    
+</web-app>
 ```
 
